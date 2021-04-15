@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.4
+// @version      0.5
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -31,6 +31,12 @@
 
     new MutationObserver(() => {
       document.querySelectorAll('.chat-line__message').forEach(node => {
+        if (!node.parentNode.classList.contains("chat-scrollable-area__message-container")) {
+          //* Ignore messages that are not a direct child of the `chat-scrollable-area__message-container`,
+          //* which means messages already highlighted with channel points are not highlighted twice.
+          return
+        }
+
         const nodeCopy = node.cloneNode(true)
 
         //* Remove BTTV tooltips, because they might include the streamer's username.
