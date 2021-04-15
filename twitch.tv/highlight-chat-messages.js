@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.3
+// @version      0.4
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -31,7 +31,12 @@
 
     new MutationObserver(() => {
       document.querySelectorAll('.chat-line__message').forEach(node => {
-        const message = node.innerText.toLowerCase()
+        const nodeCopy = node.cloneNode(true)
+
+        //* Remove BTTV tooltips, because they might include the streamer's username.
+        nodeCopy.querySelectorAll('.bttv-emote-tooltip').forEach(bttvTooltip => bttvTooltip.parentNode.removeChild(bttvTooltip))
+
+        const message = nodeCopy.innerText.toLowerCase()
 
         if (hasBadge(node, "Broadcaster")) {
           node.style = style(colors.author.streamer)
