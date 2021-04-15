@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
-// @namespace    https://greasyfork.org/en
+// @namespace    https://github.com/wesermann/userscripts
 // @version      0.3
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
