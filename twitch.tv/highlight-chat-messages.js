@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.5
+// @version      0.6
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -39,8 +39,8 @@
 
       const nodeCopy = node.cloneNode(true)
 
-      //* Remove BTTV tooltips, because they might include the streamer's username.
-      nodeCopy.querySelectorAll('.bttv-emote-tooltip').forEach(bttvTooltip => bttvTooltip.parentNode.removeChild(bttvTooltip))
+      //* Remove emote tooltips, because they might include the streamer's username.
+      nodeCopy.querySelectorAll('.bttv-emote-tooltip, .tw-tooltip').forEach(emoteTooltip => emoteTooltip.parentNode.removeChild(emoteTooltip))
 
       const message = nodeCopy.innerText.toLowerCase()
 
