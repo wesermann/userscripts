@@ -88,7 +88,7 @@ function style(color) {
   return `
             border: 1px solid #222;
             margin: -1px;
-            background-color: ${color}3F; //* Same color, but with some transparency.
+            background-color: ${color}3F;
             border-left: 6px solid ${color};
           `
 }
