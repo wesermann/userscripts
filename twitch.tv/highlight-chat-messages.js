@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.7.2
+// @version      0.8
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -9,13 +9,14 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(async function() {
   'use strict'
 
-  //& Color palette: https://coolors.co/ff1f1f-00bf00-bfff00-3f003f-ff7f00-00ffff-df00df
+  //& Color palette: https://coolors.co/ff1f1f-527652-00bf00-bfff00-3f003f-ff7f00-00ffff-df00df
   const colors = {
     author: {
       streamer:  "#FF1F1F", //* Red RYB.
+      bot:       "#527652", //* Amazon.
       moderator: "#00BF00", //* Kelly Green.
       vip:       "#BFFF00", //* Bitter Lime.
       user:      "#3F003F", //* Russian Violet.
@@ -29,6 +30,7 @@
 
   const streamer = window.channelName ?? location.pathname.replaceAll("/popout", "").split("/")[1]
   const user = document.cookie.split(';').filter(c => c.includes("name="))[0]?.split('=')[1]
+  const bots = await getBots()
 
   new MutationObserver(() => {
     document.querySelectorAll('.chat-line__message').forEach(node => {
@@ -48,6 +50,10 @@
       if (hasBadge(node, "Broadcaster")) {
         //* Message sent by streamer.
         node.style = style(colors.author.streamer)
+      }
+      else if (bots.includes(getAuthor(node))) {
+        //* Message sent by bot.
+        node.style = style(colors.author.bot)
       }
       else if (hasBadge(node, "Moderator")) {
         //* Message sent by moderator.
@@ -69,7 +75,7 @@
       if (user) {
         //^* You are logged in. If any of the rules below apply, they override the ones above.
 
-        if (sentBy(node, user)) {
+        if (getAuthor(node) === user) {
           //* Message sent by you.
           node.style = style(colors.author.user)
         }
@@ -98,7 +104,29 @@ function hasBadge(node, badgeName) {
   return node.querySelector(`img.chat-badge[alt="${badgeName}"]`)
 }
 
-//^ Check if message is sent by specific user.
-function sentBy(node, user) {
-  return node.querySelector("span.chat-author__display-name").attributes["data-a-user"].value === user
+//^ Get the author of a message.
+function getAuthor(node) {
+  return node.querySelector("span.chat-author__display-name").attributes["data-a-user"].value
+}
+
+//^ Fetch known bots from `twitchbots.info` API.
+function getBots() {
+	return new Promise((resolve, reject) => {
+		const xhr = new XMLHttpRequest()
+
+		xhr.open('GET', 'https://api.twitchbots.info/v2/bot?limit=0', true)
+
+		xhr.responseType = 'json'
+
+		xhr.onload = () => {
+			if (xhr.status == 200) {
+				resolve(xhr.response.bots.map(bot => bot.username))
+			}
+			else {
+				reject(xhr.status)
+			}
+		}
+
+		xhr.send()
+	})
 }
