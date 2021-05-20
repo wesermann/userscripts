@@ -1,13 +1,16 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.8
+// @version      0.8,1
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
 // @icon         https://www.google.com/s2/favicons?domain=twitch.tv
 // @grant        none
 // ==/UserScript==
+
+//? TODO: Add support for Admin badge.
+//? TODO: Add support for Staff badge.
 
 (async function() {
   'use strict'
@@ -43,7 +46,7 @@
       const nodeCopy = node.cloneNode(true)
 
       //* Remove emote tooltips, because they might include the streamer's username.
-      nodeCopy.querySelectorAll('.bttv-emote-tooltip, .tw-tooltip').forEach(emoteTooltip => emoteTooltip.parentNode.removeChild(emoteTooltip))
+      nodeCopy.querySelectorAll('[class*=tooltip]').forEach(emoteTooltip => emoteTooltip.parentNode.removeChild(emoteTooltip))
 
       const message = nodeCopy.innerText.toLowerCase()
 
