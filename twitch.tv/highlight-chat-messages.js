@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.8.1
+// @version      0.8.2
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -43,12 +43,33 @@
         return
       }
 
-      const nodeCopy = node.cloneNode(true)
+      //! Legacy code (0.8.1): Copying and removing nodes seemed to cause lag.
+      // const nodeCopy = node.cloneNode(true)
+      // //* Remove emote tooltips, because they might include the streamer's username.
+      // nodeCopy.querySelectorAll('[class*=tooltip]').forEach(emoteTooltip => emoteTooltip.parentNode.removeChild(emoteTooltip))
+      // const message = nodeCopy.innerText.toLowerCase()
 
-      //* Remove emote tooltips, because they might include the streamer's username.
-      nodeCopy.querySelectorAll('[class*=tooltip]').forEach(emoteTooltip => emoteTooltip.parentNode.removeChild(emoteTooltip))
+      //^* Get message text, without the text from emote tooltips.
 
-      const message = nodeCopy.innerText.toLowerCase()
+      let text = []
+
+      const subnodes = node.querySelectorAll('[data-test-selector="chat-line-message-body"] :not([class*=tooltip], [class*=tooltip] *)')
+
+      subnodes.forEach(n => {
+        let child = n.firstChild
+
+        while (child) {
+            if (child.nodeType == Node.TEXT_NODE) {
+                text.push(child.data)
+            }
+
+            child = child.nextSibling
+        }
+      })
+
+      const message = text.join('').toLowerCase()
+
+      //^* Apply highlights.
 
       if (hasBadge(node, "Broadcaster")) {
         //* Message sent by streamer.
