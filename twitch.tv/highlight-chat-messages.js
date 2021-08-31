@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.8.2
+// @version      0.8.2.1
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -31,7 +31,7 @@
     },
   }
 
-  const streamer = window.channelName ?? location.pathname.replaceAll("/popout", "").split("/")[1]
+  const streamer = window.channelName ?? location.pathname.replaceAll("/popout", "").replaceAll("/embed", "").split("/")[1]
   const user = document.cookie.split(';').filter(c => c.includes("name="))[0]?.split('=')[1]
   const bots = await getBots()
 
