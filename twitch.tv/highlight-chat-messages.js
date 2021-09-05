@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.8.2.1
+// @version      0.8.2.2
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -42,12 +42,6 @@
         //* which means messages already highlighted with channel points are not highlighted twice.
         return
       }
-
-      //! Legacy code (0.8.1): Copying and removing nodes seemed to cause lag.
-      // const nodeCopy = node.cloneNode(true)
-      // //* Remove emote tooltips, because they might include the streamer's username.
-      // nodeCopy.querySelectorAll('[class*=tooltip]').forEach(emoteTooltip => emoteTooltip.parentNode.removeChild(emoteTooltip))
-      // const message = nodeCopy.innerText.toLowerCase()
 
       //^* Get message text, without the text from emote tooltips.
 
