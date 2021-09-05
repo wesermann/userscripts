@@ -31,8 +31,12 @@
     },
   }
 
-  const streamer = window.channelName ?? location.pathname.replaceAll("/popout", "").replaceAll("/embed", "").split("/")[1]
+  const streamer = window.channelName
+      ?? document.querySelector('iframe.twitch-chat').id
+      ?? location.pathname.replaceAll("/popout", "").replaceAll("/embed", "").split("/")[1]
+
   const user = document.cookie.split(';').filter(c => c.includes("name="))[0]?.split('=')[1]
+
   const bots = await getBots()
 
   new MutationObserver(() => {
@@ -53,11 +57,11 @@
         let child = n.firstChild
 
         while (child) {
-            if (child.nodeType == Node.TEXT_NODE) {
-                text.push(child.data)
-            }
+          if (child.nodeType == Node.TEXT_NODE) {
+            text.push(child.data)
+          }
 
-            child = child.nextSibling
+          child = child.nextSibling
         }
       })
 
@@ -110,11 +114,11 @@
 //^ Message highlight styling template.
 function style(color) {
   return `
-            border: 1px solid #222;
-            margin: -1px;
-            background-color: ${color}3F;
-            border-left: 6px solid ${color};
-          `
+      border: 1px solid #222;
+      margin: -1px;
+      background-color: ${color}3F;
+      border-left: 6px solid ${color};
+  `
 }
 
 //^ Check if message author has a specific badge.
