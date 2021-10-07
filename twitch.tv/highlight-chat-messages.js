@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.8.2.3
+// @version      0.8.2.4
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -14,6 +14,8 @@
 
 (async function() {
   'use strict'
+
+  console.log('Highlight important messages in chat - enabled')
 
   //& Color palette: https://coolors.co/ff1f1f-527652-00bf00-bfff00-3f003f-ff7f00-00ffff-df00df
   const colors = {
@@ -32,8 +34,11 @@
   }
 
   const streamer = window.channelName
-      ?? document.querySelector('iframe.twitch-chat')?.id
-      ?? location.pathname.replaceAll("/popout", "").replaceAll("/embed", "").split("/")[1]
+  if (!streamer) {
+    //* It's either undefined, or empty string.
+    streamer = document.querySelector('iframe.twitch-chat')?.id
+        ?? location.pathname.replaceAll("/popout", "").replaceAll("/embed", "").split("/")[1]
+  }
 
   const user = document.cookie.split(';').filter(c => c.includes("name="))[0]?.split('=')[1]
 
@@ -128,7 +133,7 @@ function hasBadge(node, badgeName) {
 
 //^ Get the author of a message.
 function getAuthor(node) {
-  return node.querySelector("span.chat-author__display-name").attributes["data-a-user"].value
+  return node.querySelector("span.chat-author__display-name")?.attributes["data-a-user"].value
 }
 
 //^ Fetch known bots from `twitchbots.info` API.
