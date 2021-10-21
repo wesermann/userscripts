@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.8.2.4
+// @version      0.8.2.5
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -14,8 +14,6 @@
 
 (async function() {
   'use strict'
-
-  console.log('Highlight important messages in chat - enabled')
 
   //& Color palette: https://coolors.co/ff1f1f-527652-00bf00-bfff00-3f003f-ff7f00-00ffff-df00df
   const colors = {
@@ -33,30 +31,32 @@
     },
   }
 
-  const streamer = window.channelName
+  let streamer = document.querySelectorAll('.tw-halo')[0]?.getAttribute("href")?.replaceAll('/', '')
   if (!streamer) {
-    //* It's either undefined, or empty string.
-    streamer = document.querySelector('iframe.twitch-chat')?.id
+    streamer = window.channelName
+        ?? document.querySelector('iframe.twitch-chat')?.id
         ?? location.pathname.replaceAll("/popout", "").replaceAll("/embed", "").split("/")[1]
   }
 
-  const user = document.cookie.split(';').filter(c => c.includes("name="))[0]?.split('=')[1]
+  const user = document.cookie.split(';').filter(c => c.includes("login="))[0]?.split('=')[1]
+
+  console.log(`Highlight important messages in chat - enabled (streamer = ${streamer}, user = ${user})`)
 
   const bots = await getBots()
 
   new MutationObserver(() => {
-    document.querySelectorAll('.chat-line__message').forEach(node => {
-      if (!node.parentNode.classList.contains("chat-scrollable-area__message-container")) {
-        //* Ignore messages that are not a direct child of the `chat-scrollable-area__message-container`,
-        //* which means messages already highlighted with channel points are not highlighted twice.
-        return
-      }
+    document.querySelectorAll('.chat-line__message, .vod-message').forEach(node => {
+      // if (!node.parentNode.classList.contains("chat-scrollable-area__message-container")) {
+      //   //* Ignore messages that are not a direct child of the `chat-scrollable-area__message-container`,
+      //   //* which means messages already highlighted with channel points are not highlighted twice.
+      //   return
+      // }
 
       //^* Get message text, without the text from emote tooltips.
 
       let text = []
 
-      const subnodes = node.querySelectorAll('[data-test-selector="chat-line-message-body"] :not([class*=tooltip], [class*=tooltip] *)')
+      const subnodes = node.querySelectorAll('[data-test-selector="chat-line-message-body"] :not([class*=tooltip], [class*=tooltip] *), .message  :not([class*=tooltip], [class*=tooltip] *)')
 
       subnodes.forEach(n => {
         let child = n.firstChild
@@ -133,7 +133,10 @@ function hasBadge(node, badgeName) {
 
 //^ Get the author of a message.
 function getAuthor(node) {
-  return node.querySelector("span.chat-author__display-name")?.attributes["data-a-user"].value
+  const author = node.querySelector("span.chat-author__intl-login")?.innerText
+      ?? node.querySelector("span.chat-author__display-name")?.innerText
+
+  return author.replaceAll(' ', '').replaceAll('(', '').replaceAll(')', '').toLowerCase()
 }
 
 //^ Fetch known bots from `twitchbots.info` API.
