@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.8.2.5
+// @version      0.8.2.6
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -37,8 +37,9 @@
         ?? document.querySelector('iframe.twitch-chat')?.id
         ?? location.pathname.replaceAll("/popout", "").replaceAll("/embed", "").split("/")[1]
   }
+  streamer = streamer.toLowerCase()
 
-  const user = document.cookie.split(';').filter(c => c.includes("login="))[0]?.split('=')[1]
+  const user = document.cookie.split(';').filter(c => c.includes("login="))[0]?.split('=')[1].toLowerCase()
 
   console.log(`Highlight important messages in chat - enabled (streamer = ${streamer}, user = ${user})`)
 
@@ -128,7 +129,9 @@ function style(color) {
 
 //^ Check if message author has a specific badge.
 function hasBadge(node, badgeName) {
-  return node.querySelector(`img.chat-badge[alt="${badgeName}"]`)
+  const badgeNameLowerCase = badgeName.toLowerCase()
+  return node.querySelector(`span[data-badge="${badgeNameLowerCase}"]`)
+      ?? node.querySelector(`img.chat-badge[alt="${badgeNameLowerCase}"]`)
 }
 
 //^ Get the author of a message.
