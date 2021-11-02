@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         [twitch.tv] - Highlight important messages in chat
 // @namespace    https://github.com/wesermann/userscripts
-// @version      0.8.2.6
+// @version      0.8.3
 // @description  Use color coding to highlight certain chat messages.
 // @author       wesermann aka Xiithrian
 // @match        https://www.twitch.tv/*
@@ -11,17 +11,21 @@
 
 //? TODO: Add support for Admin badge.
 //? TODO: Add support for Staff badge.
+//? TODO: Check if compatible with the "new" fancy reply thing.
+
+let user, bots
 
 (async function() {
   'use strict'
 
-  //& Color palette: https://coolors.co/ff1f1f-527652-00bf00-bfff00-3f003f-ff7f00-00ffff-df00df
+  //& Color palette: https://coolors.co/ff1f1f-527652-00bf00-bfff00-b700ff-3f003f-ff7f00-00ffff-df00df
   const colors = {
     author: {
       streamer:  "#FF1F1F", //* Red RYB.
       bot:       "#527652", //* Amazon.
       moderator: "#00BF00", //* Kelly Green.
       vip:       "#BFFF00", //* Bitter Lime.
+      partner:   "#B700FF", //* Electric Purple.
       user:      "#3F003F", //* Russian Violet.
     },
     mention: {
@@ -38,12 +42,10 @@
         ?? location.pathname.replaceAll("/popout", "").replaceAll("/embed", "").split("/")[1]
   }
   streamer = streamer.toLowerCase()
-
-  const user = document.cookie.split(';').filter(c => c.includes("login="))[0]?.split('=')[1].toLowerCase()
+  user = document.cookie.split(';').filter(c => c.includes("login="))[0]?.split('=')[1].toLowerCase()
+  bots = await getBots()
 
   console.log(`Highlight important messages in chat - enabled (streamer = ${streamer}, user = ${user})`)
-
-  const bots = await getBots()
 
   new MutationObserver(() => {
     document.querySelectorAll('.chat-line__message, .vod-message').forEach(node => {
@@ -54,62 +56,46 @@
       // }
 
       //^* Get message text, without the text from emote tooltips.
-
       let text = []
-
       const subnodes = node.querySelectorAll('[data-test-selector="chat-line-message-body"] :not([class*=tooltip], [class*=tooltip] *), .message  :not([class*=tooltip], [class*=tooltip] *)')
-
       subnodes.forEach(n => {
         let child = n.firstChild
-
         while (child) {
           if (child.nodeType == Node.TEXT_NODE) {
             text.push(child.data)
           }
-
           child = child.nextSibling
         }
       })
-
       const message = text.join('').toLowerCase()
 
       //^* Apply highlights.
-
-      if (hasBadge(node, "Broadcaster")) {
-        //* Message sent by streamer.
+      if (sentBy(node, "Broadcaster")) {
         node.style = style(colors.author.streamer)
       }
-      else if (bots.includes(getAuthor(node))) {
-        //* Message sent by bot.
+      else if (sentBy(node, "Bot")) {
         node.style = style(colors.author.bot)
       }
-      else if (hasBadge(node, "Moderator")) {
-        //* Message sent by moderator.
+      else if (sentBy(node, "Moderator")) {
         node.style = style(colors.author.moderator)
       }
-      else if (hasBadge(node, "VIP")) {
-        //* Message sent by VIP.
+      else if (sentBy(node, "VIP")) {
         node.style = style(colors.author.vip)
       }
+      else if (sentBy(node, "Partner")) {
+        node.style = style(colors.author.partner)
+      }
       else if (message.includes(streamer)) {
-        //* Message mentions streamer.
         node.style = style(colors.mention.streamer)
       }
       else if (message.includes("chat")) {
-        //* Message mentions chat.
         node.style = style(colors.mention.chat)
       }
-
       if (user) {
-        //^* You are logged in. If any of the rules below apply, they override the ones above.
-
-        if (getAuthor(node) === user) {
-          //* Message sent by you.
+        if (sentBy(node, "User")) {
           node.style = style(colors.author.user)
         }
-
         else if (message.includes(user)) {
-          //* Message mentions you.
           node.style = style(colors.mention.user)
         }
       }
@@ -127,9 +113,15 @@ function style(color) {
   `
 }
 
-//^ Check if message author has a specific badge.
-function hasBadge(node, badgeName) {
-  const badgeNameLowerCase = badgeName.toLowerCase()
+//^ Check who sent message.
+function sentBy(node, author) {
+  if (author === "User") {
+    return getAuthor(node) === user
+  }
+  if (author === "Bot") {
+    return bots.includes(getAuthor(node))
+  }
+  const badgeNameLowerCase = author.toLowerCase()
   return node.querySelector(`span[data-badge="${badgeNameLowerCase}"]`)
       ?? node.querySelector(`img.chat-badge[alt="${badgeNameLowerCase}"]`)
 }
@@ -138,7 +130,6 @@ function hasBadge(node, badgeName) {
 function getAuthor(node) {
   const author = node.querySelector("span.chat-author__intl-login")?.innerText
       ?? node.querySelector("span.chat-author__display-name")?.innerText
-
   return author.replaceAll(' ', '').replaceAll('(', '').replaceAll(')', '').toLowerCase()
 }
 
@@ -146,11 +137,8 @@ function getAuthor(node) {
 function getBots() {
 	return new Promise((resolve, reject) => {
 		const xhr = new XMLHttpRequest()
-
 		xhr.open('GET', 'https://api.twitchbots.info/v2/bot?limit=0', true)
-
 		xhr.responseType = 'json'
-
 		xhr.onload = () => {
 			if (xhr.status == 200) {
 				resolve(xhr.response.bots.map(bot => bot.username))
@@ -159,7 +147,6 @@ function getBots() {
 				reject(xhr.status)
 			}
 		}
-
 		xhr.send()
 	})
 }
